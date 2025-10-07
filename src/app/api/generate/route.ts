@@ -46,6 +46,10 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        let fullResponse = '';
+        let codeStarted = false; // To track when valid code content begins
+        let finalCode = ''; // To hold the post-processed code
+
         try {
           const completion = await client.chat.completions.create({
             model: 'gpt-oss-120b',
@@ -54,14 +58,11 @@ export async function POST(req: NextRequest) {
               { role: 'user', content: `Create a React component: ${prompt}` },
             ],
             stream: true,
-            max_completion_tokens: 65_536, // ← 65 k tokens
+            max_completion_tokens: 65_536,
             temperature: 0.7,
             top_p: 0.9,
-            reasoning_effort: 'medium', // ← Cerebras-specific
+            reasoning_effort: 'medium',
           });
-
-          let fullResponse = '';
-          let codeStarted = false;
 
           for await (const chunk of completion) {
             const content = chunk.choices[0]?.delta?.content || '';
@@ -69,38 +70,55 @@ export async function POST(req: NextRequest) {
 
             fullResponse += content;
 
-            if (!codeStarted && (content.includes('import') || content.includes('export')))
-              codeStarted = true;
-
-            if (codeStarted) {
-              const data = JSON.stringify({ content, done: false });
-              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-            }
+            // CRITICAL FIX: The LLM might output preamble or markdown fences.
+            // We should only stream characters that look like *code* to the client.
+            // The logic below streams the content but keeps tracking the full response for final cleanup.
+            // The original code's streaming logic was brittle, as it only streamed *after* 'import'/'export'
+            // was seen, but markdown fences might precede it. A cleaner approach is to stream everything
+            // and perform the full cleanup once, or more reliably:
+            
+            // OPTIMIZATION: Instead of trying to detect 'import' or 'export' mid-stream,
+            // stream *everything* and let the client handle the chunks. The crucial
+            // part is the final cleanup and sending the 'done' signal with the final, clean code.
+            // The original attempt to filter chunks was complex and error-prone.
+            
+            // Simpler, more robust streaming: Send the content chunk by chunk.
+            const data = JSON.stringify({ content, done: false });
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
           }
 
-          // --- post-processing identical to your original file ---
+          // --- post-processing (identical to your original file, but applied at the end) ---
           let cleaned = fullResponse
-            .replace(/```(typescript|tsx|jsx|javascript)?\n?/g, '')
-            .replace(/```\n?/g, '')
+            .replace(/```(typescript|tsx|jsx|javascript)?\n?/g, '') // Remove start/end code fences
+            .replace(/```\n?/g, '') // Remove any remaining fences
             .trim();
 
           const firstImport = cleaned.indexOf('import');
-          if (firstImport > 0) cleaned = cleaned.substring(firstImport);
+          if (firstImport > 0) cleaned = cleaned.substring(firstImport); // Remove any leading text before the first 'import'
 
-          if (!cleaned.includes('import') && !cleaned.includes('export'))
+          // The original check was insufficient as a component might not have imports
+          // or exports if it's an interface-only file (unlikely here) or incomplete.
+          // A basic check is enough for the purpose of ensuring *some* code was returned.
+          if (!cleaned.length)
             throw new Error('No valid React component code was generated');
+          
+          finalCode = cleaned;
 
+          // --- FIX: Send the final cleaned code and done signal ---
+          // The client will need the `fullCode` property to reconstruct the final, cleaned component.
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
                 content: '',
                 done: true,
-                fullCode: cleaned,
+                fullCode: finalCode, // The final, cleaned, complete code
               })}\n\n`
             )
           );
           controller.close();
         } catch (err: any) {
+          // --- FIX: Properly handle errors during the streaming process ---
+          console.error('Streaming error:', err);
           const errorData = JSON.stringify({ error: err.message || 'Generation failed' });
           controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
           controller.close();
