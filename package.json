@@ -37,7 +37,8 @@
     "next": "14.2.33",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hot-toast": "^2.4.1"
+    "react-hot-toast": "^2.4.1",
+    "@cerebras/cerebras_cloud_sdk": "^1.0.0"  // <--- CRITICAL FIX: Add the missing package
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
