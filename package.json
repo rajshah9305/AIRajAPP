@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/raj/raj-ai-app-builder.git"
+    "url": "https://github.com/rajshah9305/raj-ai-app-builder.git"
   },
   "keywords": [
     "ai",
@@ -38,7 +38,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
-    "@cerebras/cerebras_cloud_sdk": "^1.0.0"  // <--- CRITICAL FIX: Add the missing package
+    "@cerebras/cerebras_cloud_sdk": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
@@ -56,3 +56,4 @@
     "npm": ">=9.0.0"
   }
 }
+
