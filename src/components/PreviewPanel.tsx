@@ -39,9 +39,12 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
+      width: '100vw',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       color: '#64748b',
-      background: 'linear-gradient(135deg, #fef3c7 0%, #fecaca 100%)'
+      background: 'linear-gradient(135deg, #fef3c7 0%, #fecaca 100%)',
+      margin: 0,
+      padding: 0
     }}>
       <div style={{ textAlign: 'center', padding: '2rem' }}>
         <div style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.6 }}>⚡</div>
@@ -73,7 +76,7 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
         cleanedCode = `import React, { useState } from 'react';\n${cleanedCode}`;
       }
 
-      // Convert Tailwind classes to inline styles (as fallback if AI still generates them)
+      // Convert Tailwind classes to inline styles (as fallback)
       cleanedCode = cleanedCode.replace(/className="([^"]*)"/g, (match: string, classes: string) => {
         const styleMap: Record<string, string> = {
           'bg-red-500': 'backgroundColor: "#ef4444"',
@@ -115,26 +118,73 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
         return match;
       });
 
-      // Ensure proper export
-      if (!cleanedCode.includes('export default')) {
-        const functionMatch = cleanedCode.match(/function\s+([A-Z]\w*)/);
-        const constMatch = cleanedCode.match(/const\s+([A-Z]\w*)\s*[=:]/);
-        
-        if (functionMatch) {
-          cleanedCode += `\n\nexport default ${functionMatch[1]};`;
-        } else if (constMatch) {
-          cleanedCode += `\n\nexport default ${constMatch[1]};`;
-        } else {
-          cleanedCode = `export default function GeneratedComponent() {\n${cleanedCode}\n}`;
-        }
+      // Find the main component function/const
+      const functionMatch = cleanedCode.match(/(?:export default )?function\s+([A-Z]\w*)/);
+      const constMatch = cleanedCode.match(/(?:export default )?const\s+([A-Z]\w*)\s*=/);
+      
+      let componentName = '';
+      if (functionMatch) {
+        componentName = functionMatch[1];
+      } else if (constMatch) {
+        componentName = constMatch[1];
       }
+
+      // Remove existing export default to avoid duplication
+      cleanedCode = cleanedCode.replace(/export default\s+\w+;?\s*$/m, '');
+
+      // Wrap component in a fullscreen container
+      const wrappedCode = `${cleanedCode}
+
+// Fullscreen wrapper to ensure component fills entire preview
+export default function FullscreenWrapper() {
+  return (
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      margin: 0,
+      padding: 0,
+      overflow: 'auto',
+      position: 'fixed',
+      top: 0,
+      left: 0
+    }}>
+      <${componentName || 'GeneratedComponent'} />
+    </div>
+  );
+}`;
 
       setHasError(false);
       setErrorMessage("");
       
       return {
         '/App.tsx': {
-          code: cleanedCode,
+          code: wrappedCode,
+        },
+        '/index.html': {
+          code: `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body, #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>`,
         }
       };
 
@@ -153,10 +203,12 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
+      width: '100vw',
       fontFamily: 'system-ui, sans-serif',
       color: '#ef4444',
       background: '#fef2f2',
-      padding: '2rem'
+      padding: '2rem',
+      margin: 0
     }}>
       <div style={{ textAlign: 'center', maxWidth: '500px' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
@@ -271,9 +323,9 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
         </div>
       </div>
       
-      <div className="flex-1 p-2 sm:p-4 min-h-0 overflow-hidden">
+      <div className="flex-1 p-0 min-h-0 overflow-hidden">
         {hasError && errorMessage && (
-          <div className="mb-2 sm:mb-4 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 animate-fadeIn">
+          <div className="absolute top-16 left-4 right-4 z-10 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 animate-fadeIn shadow-lg">
             <AlertTriangle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
             <div className="text-xs sm:text-sm text-red-700 flex-1">
               <div className="font-semibold mb-1">Preview Error</div>
@@ -285,7 +337,7 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
           </div>
         )}
         
-        <div className="h-full bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+        <div className="h-full bg-gray-50 overflow-hidden">
           {!code ? (
             renderEmptyState()
           ) : (
