@@ -111,7 +111,10 @@ export async function POST(req: NextRequest) {
           });
 
           for await (const chunk of completion) {
-            const content = chunk.choices[0]?.delta?.content || '';
+            // Type-safe access to chunk properties
+            const delta = (chunk as any).choices?.[0]?.delta;
+            const content = delta?.content || '';
+            
             if (!content) continue;
 
             fullResponse += content;
@@ -154,7 +157,7 @@ export async function POST(req: NextRequest) {
             ...[firstImportIndex, firstFunctionIndex, firstConstIndex].filter(i => i !== -1)
           );
           
-          if (startIndex > 0) {
+          if (startIndex > 0 && startIndex !== Infinity) {
             cleanedCode = cleanedCode.substring(startIndex);
           }
 
