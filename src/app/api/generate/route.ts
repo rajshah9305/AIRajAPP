@@ -12,7 +12,7 @@ CRITICAL RULES:
 1. Return ONLY valid React/TypeScript code - no explanations, no markdown fences, no comments outside the code
 2. Use functional components with TypeScript interfaces
 3. Include proper TypeScript types for all props and state
-4. Use Tailwind CSS utility classes for styling (NO custom CSS, NO style objects unless absolutely necessary)
+4. ALWAYS use inline styles with the style={{}} prop - NEVER use className or Tailwind classes
 5. Make components interactive and production-ready with proper state management
 6. Include all necessary imports (React, useState, useEffect, etc.)
 7. ALWAYS export the component as default: "export default function ComponentName() { ... }"
@@ -20,18 +20,27 @@ CRITICAL RULES:
 9. Use semantic HTML and accessible markup
 10. Handle edge cases and provide good UX
 
-STYLING REQUIREMENTS:
-- Use Tailwind CSS utility classes exclusively
-- Create responsive designs with sm:, md:, lg: prefixes
-- Add smooth transitions and hover effects
-- Use modern color schemes (gradients, shadows, etc.)
-- Ensure proper spacing and layout
+STYLING REQUIREMENTS (CRITICAL):
+- Use ONLY inline styles with camelCase CSS properties
+- Example: style={{ backgroundColor: '#ef4444', color: '#ffffff', padding: '1rem' }}
+- DO NOT use className prop
+- DO NOT use Tailwind utility classes
+- Create responsive designs using CSS properties
+- Add smooth transitions and hover effects using inline styles
+- Use modern color schemes with hex codes or rgba values
+
+COLOR PALETTE TO USE:
+- Red shades: #ef4444 (red-500), #dc2626 (red-600), #b91c1c (red-700)
+- Orange shades: #f97316 (orange-500), #ea580c (orange-600), #fb923c (orange-400)
+- Blue shades: #3b82f6 (blue-500), #2563eb (blue-600), #1d4ed8 (blue-700)
+- Gray shades: #f3f4f6 (gray-100), #e5e7eb (gray-200), #6b7280 (gray-500)
+- Green shades: #10b981 (green-500), #059669 (green-600)
 
 COMPONENT STRUCTURE:
 import React, { useState } from 'react';
 
 interface ComponentNameProps {
-  // Define props with TypeScript types
+  // Define props with TypeScript types if needed
 }
 
 export default function ComponentName() {
@@ -45,13 +54,55 @@ export default function ComponentName() {
 
   // Render
   return (
-    <div className="tailwind classes here">
-      {/* Component JSX */}
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      backgroundColor: '#f3f4f6',
+      padding: '2rem'
+    }}>
+      {/* Component JSX with inline styles */}
     </div>
   );
 }
 
-Remember: NO markdown, NO explanations, ONLY code!`;
+EXAMPLE BUTTON STYLE:
+<button
+  onClick={handleClick}
+  style={{
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '0.5rem',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    fontWeight: '600',
+    transition: 'all 0.2s'
+  }}
+  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+>
+  Click Me
+</button>
+
+EXAMPLE INPUT STYLE:
+<input
+  type="text"
+  placeholder="Enter text..."
+  style={{
+    width: '100%',
+    padding: '0.75rem',
+    border: '1px solid #d1d5db',
+    borderRadius: '0.5rem',
+    fontSize: '1rem',
+    outline: 'none'
+  }}
+  onFocus={(e) => e.currentTarget.style.borderColor = '#f97316'}
+  onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+/>
+
+Remember: NO markdown, NO explanations, NO Tailwind classes, ONLY inline styled code!`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -101,7 +152,9 @@ export async function POST(req: NextRequest) {
               { role: 'system', content: systemPrompt },
               { 
                 role: 'user', 
-                content: `Create a React TypeScript component with the following requirements: ${prompt}\n\nRemember: Output ONLY the code, no markdown fences, no explanations.` 
+                content: `Create a React TypeScript component with the following requirements: ${prompt}
+
+REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind classes. Make it beautiful with proper colors, spacing, and interactions.` 
               },
             ],
             stream: true,
