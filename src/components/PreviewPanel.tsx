@@ -14,11 +14,9 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [previewStatus, setPreviewStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
 
-  // Reset preview status when code changes
   useEffect(() => {
     if (code) {
       setPreviewStatus('loading');
-      // Set a timeout to mark as ready after Sandpack initializes
       const timer = setTimeout(() => {
         if (!hasError) {
           setPreviewStatus('ready');
@@ -30,7 +28,6 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
     }
   }, [code, hasError]);
 
-  // Clean and parse the generated code to create a proper React component structure
   const sandpackFiles = useMemo(() => {
     if (!code.trim()) {
       return {
@@ -62,36 +59,64 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
       };
     }
 
-    // Clean the code by removing markdown code fences and extra formatting
     let componentCode = code
-      .replace(/^```+\s*(tsx?|typescript|javascript|jsx|react)?\s*$/gm, '') // Remove opening fences with labels
-      .replace(/^```+\s*$/gm, '') // Remove standalone code fence lines
-      .replace(/```+$/gm, '') // Remove closing fences
+      .replace(/^```+\s*(tsx?|typescript|javascript|jsx|react)?\s*$/gm, '')
+      .replace(/^```+\s*$/gm, '')
+      .replace(/```+$/gm, '')
       .trim();
 
     try {
-      // Detect if it's TypeScript or JavaScript based on content
-      const isTypeScript = componentCode.includes('interface ') || 
-                          componentCode.includes('type ') || 
-                          componentCode.includes(': React.') ||
-                          componentCode.includes('<FC') ||
-                          componentCode.includes('Props>');
-
-      // Remove TypeScript-only syntax if needed for preview
       let cleanedCode = componentCode;
-      
-      // Handle common TypeScript patterns
-      if (isTypeScript) {
-        // Keep the TypeScript code but ensure it's valid
-        cleanedCode = componentCode
-          .replace(/import\s+React,\s*{/g, 'import React, {')
-          .replace(/from\s+"react";/g, 'from "react";')
-          .replace(/from\s+'react';/g, 'from "react";');
+
+      // Ensure React import exists
+      if (!cleanedCode.includes('import React') && !cleanedCode.includes('from "react"') && !cleanedCode.includes("from 'react'")) {
+        cleanedCode = `import React, { useState } from 'react';\n${cleanedCode}`;
       }
 
-      // Ensure there's an export statement
+      // Convert Tailwind classes to inline styles for Sandpack compatibility
+      cleanedCode = cleanedCode.replace(/className="([^"]*)"/g, (match, classes) => {
+        const styleMap: Record<string, string> = {
+          'bg-red-500': 'background: "#ef4444"',
+          'bg-red-600': 'background: "#dc2626"',
+          'bg-red-700': 'background: "#b91c1c"',
+          'text-white': 'color: "#ffffff"',
+          'text-red-500': 'color: "#ef4444"',
+          'text-red-600': 'color: "#dc2626"',
+          'rounded-md': 'borderRadius: "0.375rem"',
+          'shadow-md': 'boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"',
+          'p-10': 'padding: "2.5rem"',
+          'p-4': 'padding: "1rem"',
+          'px-4': 'paddingLeft: "1rem", paddingRight: "1rem"',
+          'py-2': 'paddingTop: "0.5rem", paddingBottom: "0.5rem"',
+          'mb-5': 'marginBottom: "1.25rem"',
+          'w-full': 'width: "100%"',
+          'h-screen': 'height: "100vh"',
+          'flex': 'display: "flex"',
+          'justify-center': 'justifyContent: "center"',
+          'items-center': 'alignItems: "center"',
+          'text-3xl': 'fontSize: "1.875rem"',
+          'font-bold': 'fontWeight: "700"',
+          'border': 'border: "1px solid #e5e7eb"',
+          'border-gray-300': 'borderColor: "#d1d5db"',
+        };
+
+        const classArray = classes.split(' ').filter(Boolean);
+        const styles: string[] = [];
+        
+        classArray.forEach(cls => {
+          if (styleMap[cls]) {
+            styles.push(styleMap[cls]);
+          }
+        });
+
+        if (styles.length > 0) {
+          return `style={{${styles.join(', ')}}}`;
+        }
+        return match;
+      });
+
+      // Ensure proper export
       if (!cleanedCode.includes('export default')) {
-        // Try to find the component name
         const functionMatch = cleanedCode.match(/function\s+([A-Z]\w*)/);
         const constMatch = cleanedCode.match(/const\s+([A-Z]\w*)\s*[=:]/);
         
@@ -100,22 +125,8 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
         } else if (constMatch) {
           cleanedCode += `\n\nexport default ${constMatch[1]};`;
         } else {
-          // Wrap the entire code in a component
-          cleanedCode = `import React from 'react';
-
-export default function GeneratedComponent() {
-  return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', minHeight: '100vh' }}>
-      {${cleanedCode}}
-    </div>
-  );
-}`;
+          cleanedCode = `export default function GeneratedComponent() {\n${cleanedCode}\n}`;
         }
-      }
-
-      // Ensure React is imported
-      if (!cleanedCode.includes('import') && !cleanedCode.includes('require')) {
-        cleanedCode = `import React from 'react';\n${cleanedCode}`;
       }
 
       setHasError(false);
@@ -153,7 +164,7 @@ export default function GeneratedComponent() {
           Component Parse Error
         </div>
         <div style={{ fontSize: '14px', color: '#991b1b', marginBottom: '16px' }}>
-          ${errMsg}
+          ${errMsg.replace(/"/g, "'")}
         </div>
         <div style={{ fontSize: '12px', color: '#7f1d1d' }}>
           Try refreshing or regenerating the component
@@ -283,39 +294,6 @@ export default function GeneratedComponent() {
                 key={refreshKey}
                 template="react-ts"
                 files={sandpackFiles}
-                theme={{
-                  colors: {
-                    surface1: '#ffffff',
-                    surface2: '#f8fafc',
-                    surface3: '#f1f5f9',
-                    clickable: '#64748b',
-                    base: '#1e293b',
-                    disabled: '#94a3b8',
-                    hover: '#475569',
-                    accent: '#f97316',
-                    error: '#ef4444',
-                    errorSurface: '#fef2f2',
-                    warning: '#f59e0b',
-                    warningSurface: '#fffbeb',
-                  },
-                  syntax: {
-                    plain: '#1e293b',
-                    comment: {color: '#64748b', fontStyle: 'italic'},
-                    keyword: '#7c3aed',
-                    tag: '#dc2626',
-                    punctuation: '#64748b',
-                    definition: '#059669',
-                    property: '#0ea5e9',
-                    static: '#dc2626',
-                    string: '#059669',
-                  },
-                  font: {
-                    body: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    mono: '"Fira Code", "Consolas", "Monaco", monospace',
-                    size: '13px',
-                    lineHeight: '1.4',
-                  },
-                }}
                 options={{
                   showNavigator: false,
                   showTabs: false,
@@ -325,20 +303,12 @@ export default function GeneratedComponent() {
                   autoReload: true,
                   recompileMode: 'delayed',
                   recompileDelay: 500,
-                  initMode: 'lazy',
                   layout: 'preview',
-                  classes: {
-                    'sp-wrapper': 'h-full',
-                    'sp-layout': 'h-full',
-                    'sp-preview-container': 'h-full',
-                    'sp-preview-iframe': 'h-full',
-                  },
                 }}
                 customSetup={{
                   dependencies: {
                     'react': '^18.2.0',
                     'react-dom': '^18.2.0',
-                    'lucide-react': '0.263.1',
                   },
                 }}
               />
