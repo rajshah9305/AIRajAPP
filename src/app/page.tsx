@@ -1,7 +1,8 @@
 'use client';
-import { useState, useRef } from 'react';
+
+import { useState, useRef, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { Loader2, Sparkles, Code2, Play, Github, Menu, X, StopCircle, MessageSquare, Eye, RotateCcw } from 'lucide-react';
+import { Loader2, Sparkles, Code2, Play, Github, Menu, X, StopCircle, MessageSquare, Eye, RotateCcw, Send } from 'lucide-react';
 import { CodeEditor } from '@/components/CodeEditor';
 import { PreviewPanel } from '@/components/PreviewPanel';
 import { ChatInput } from '@/components/ChatInput';
@@ -14,15 +15,18 @@ interface Message {
 }
 
 export default function Home() {
+  /* ---------- core state ---------- */
   const [prompt, setPrompt] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [generatedCode, setGeneratedCode] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [currentView, setCurrentView] = useState<'preview' | 'code' | 'both'>('both');
+  
   const abortControllerRef = useRef<AbortController | null>(null);
+  const threadRef = useRef<HTMLDivElement | null>(null);
 
   const examplePrompts = [
     'Create a beautiful todo list with drag and drop, animations, and a gradient design',
@@ -33,6 +37,12 @@ export default function Home() {
     'Build a product showcase with image carousel, zoom, and hover effects',
   ];
 
+  /* ---------- auto-scroll thread ---------- */
+  useEffect(() => {
+    threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages]);
+
+  /* ---------- generation ---------- */
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) {
       toast.error('Please enter a description for your app');
@@ -77,10 +87,15 @@ export default function Home() {
     let accumulatedCode = '';
 
     try {
+      const isFollowUp = messages.length > 0;
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: inputPrompt }),
+        body: JSON.stringify({
+          prompt: isFollowUp
+            ? `Previous code:\n${generatedCode}\n\nUser request: ${inputPrompt}\n\nPlease apply the requested changes and return the full updated component.`
+            : inputPrompt,
+        }),
         signal: abortControllerRef.current.signal,
       });
 
@@ -196,6 +211,7 @@ export default function Home() {
     }
   };
 
+  /* ---------- render ---------- */
   return (
     <>
       <Toaster 
