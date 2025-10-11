@@ -251,7 +251,7 @@ export default function FullscreenWrapper() {
         <div className="relative">
           <Eye size={64} className="mx-auto opacity-10" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin opacity-20"></div>
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin opacity-20"></div>
           </div>
         </div>
         <div className="text-lg font-semibold text-gray-700">Live Preview</div>
@@ -264,7 +264,7 @@ export default function FullscreenWrapper() {
   const getStatusColor = () => {
     switch (previewStatus) {
       case 'error': return 'bg-red-100 text-red-700 border-red-200';
-      case 'loading': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'loading': return 'bg-primary-100 text-primary-700 border-primary-200';
       case 'ready': return 'bg-green-100 text-green-700 border-green-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
