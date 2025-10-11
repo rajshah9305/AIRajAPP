@@ -1,10 +1,28 @@
 // src/app/api/generate/route.ts
 import { NextRequest } from 'next/server';
-import Cerebras from '@cerebras/cerebras_cloud_sdk';
 
-const client = new Cerebras({
-  apiKey: process.env.CEREBRAS_API_KEY!,
-});
+// Dynamically import Cerebras only when needed to avoid build errors
+let Cerebras: any;
+let client: any;
+
+// Initialize Cerebras client only when API is called
+const getClient = async () => {
+  if (!client) {
+    if (!Cerebras) {
+      Cerebras = (await import('@cerebras/cerebras_cloud_sdk')).default;
+    }
+    
+    if (!process.env.CEREBRAS_API_KEY) {
+      throw new Error('CEREBRAS_API_KEY is not configured. Please add it to your .env file.');
+    }
+    
+    client = new Cerebras({
+      apiKey: process.env.CEREBRAS_API_KEY,
+    });
+  }
+  
+  return client;
+};
 
 const systemPrompt = `You are an expert React/TypeScript developer. Generate ONLY valid React component code.
 
@@ -138,6 +156,8 @@ export async function POST(req: NextRequest) {
         let hasStartedCode = false;
         
         try {
+          const clientInstance = await getClient();
+          
           // Send initial status
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ 
@@ -146,7 +166,7 @@ export async function POST(req: NextRequest) {
             })}\n\n`)
           );
 
-          const completion = await client.chat.completions.create({
+          const completion = await clientInstance.chat.completions.create({
             model: 'llama3.1-8b',
             messages: [
               { role: 'system', content: systemPrompt },
