@@ -1,20 +1,22 @@
 # 🚀 RAJ AI APP BUILDER
 
-Enterprise-grade AI-powered React application generator using Cerebras AI.
+Production-grade AI-powered React application generator using Cerebras AI. Modern two-screen UI with a marketing landing page and a builder workspace featuring live code and app previews plus a bottom-anchored chat editor.
 
 ## Features
 
-- **Real-time AI Generation**: Stream React components as they're generated
-- **Live Preview**: Interactive component preview with Sandpack
-- **Modern UI**: Responsive design with Tailwind CSS
-- **Production Ready**: TypeScript, ESLint, and optimized build
+- **Real-time AI Generation**: Stream React/TSX as it's generated
+- **Live Previews**: Side-by-side code editor and Sandpack app preview
+- **Bottom Chat Editor**: Prompt at the bottom to iterate on the app
+- **Refresh Controls**: One-click refresh for code and preview panes
+- **Modern UI**: Unified color palette, responsive, accessible design
+- **Production Ready**: TypeScript, ESLint, and optimized Next.js build
 
 ## Quick Start
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/raj/raj-ai-app-builder.git
-   cd raj-ai-app-builder
+   git clone https://github.com/rajshah9305/AIRajAPP.git
+   cd AIRajAPP
    ```
 
 2. **Install dependencies**
@@ -39,18 +41,18 @@ Enterprise-grade AI-powered React application generator using Cerebras AI.
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `CEREBRAS_API_KEY` | Your Cerebras AI API key | Yes |
+| `CEREBRAS_API_KEY` | Cerebras Cloud API key | Yes |
 
 Get your API key from [Cerebras Cloud](https://cloud.cerebras.ai).
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 with App Router
+- **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **AI**: Cerebras AI (gpt-oss-120b)
-- **Preview**: Sandpack React
-- **Icons**: Lucide React
+- **AI**: Cerebras AI (llama3.1-8b) via `@cerebras/cerebras_cloud_sdk`
+- **Preview**: `@codesandbox/sandpack-react`
+- **Icons**: `lucide-react`
 
 ## Scripts
 
@@ -67,7 +69,7 @@ npm run validate     # Run all checks
 
 Deploy to Vercel:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/raj/raj-ai-app-builder)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/rajshah9305/AIRajAPP)
 
 ## License
 
