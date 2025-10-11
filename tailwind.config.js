@@ -21,6 +21,11 @@ module.exports = {
           800: '#9a3412',
           900: '#7c2d12',
         },
+        success: {
+          100: '#dcfce7',
+          500: '#22c55e',
+          600: '#16a34a',
+        }
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

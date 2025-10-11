@@ -11,16 +11,16 @@ const getClient = async () => {
     if (!Cerebras) {
       Cerebras = (await import('@cerebras/cerebras_cloud_sdk')).default;
     }
-    
+
     if (!process.env.CEREBRAS_API_KEY) {
       throw new Error('CEREBRAS_API_KEY is not configured. Please add it to your .env file.');
     }
-    
+
     client = new Cerebras({
       apiKey: process.env.CEREBRAS_API_KEY,
     });
   }
-  
+
   return client;
 };
 
@@ -125,10 +125,10 @@ Remember: NO markdown, NO explanations, NO Tailwind classes, ONLY inline styled 
 export async function POST(req: NextRequest) {
   try {
     const { prompt } = await req.json();
-    
+
     if (!prompt) {
       return new Response(
-        JSON.stringify({ error: 'Prompt is required' }), 
+        JSON.stringify({ error: 'Prompt is required' }),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
@@ -139,9 +139,9 @@ export async function POST(req: NextRequest) {
     // Validate API key
     if (!process.env.CEREBRAS_API_KEY) {
       return new Response(
-        JSON.stringify({ 
-          error: 'CEREBRAS_API_KEY is not configured. Please add it to your .env file.' 
-        }), 
+        JSON.stringify({
+          error: 'CEREBRAS_API_KEY is not configured. Please add it to your .env file.'
+        }),
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
@@ -154,15 +154,15 @@ export async function POST(req: NextRequest) {
       async start(controller) {
         let fullResponse = '';
         let hasStartedCode = false;
-        
+
         try {
           const clientInstance = await getClient();
-          
+
           // Send initial status
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ 
-              stage: 'thinking', 
-              content: 'Generating your component...' 
+            encoder.encode(`data: ${JSON.stringify({
+              stage: 'thinking',
+              content: 'Generating your component...'
             })}\n\n`)
           );
 
@@ -170,11 +170,11 @@ export async function POST(req: NextRequest) {
             model: 'llama3.1-8b',
             messages: [
               { role: 'system', content: systemPrompt },
-              { 
-                role: 'user', 
+              {
+                role: 'user',
                 content: `Create a React TypeScript component with the following requirements: ${prompt}
 
-REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind classes. Make it beautiful with proper colors, spacing, and interactions.` 
+REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind classes. Make it beautiful with proper colors, spacing, and interactions.`
               },
             ],
             stream: true,
@@ -187,7 +187,7 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
             // Type-safe access to chunk properties
             const delta = (chunk as any).choices?.[0]?.delta;
             const content = delta?.content || '';
-            
+
             if (!content) continue;
 
             fullResponse += content;
@@ -196,9 +196,9 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
             if (!hasStartedCode && (content.includes('import') || content.includes('function') || content.includes('const'))) {
               hasStartedCode = true;
               controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ 
-                  stage: 'code', 
-                  content: '' 
+                encoder.encode(`data: ${JSON.stringify({
+                  stage: 'code',
+                  content: ''
                 })}\n\n`)
               );
             }
@@ -206,9 +206,9 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
             // Stream the content
             if (hasStartedCode) {
               controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ 
-                  stage: 'code', 
-                  content 
+                encoder.encode(`data: ${JSON.stringify({
+                  stage: 'code',
+                  content
                 })}\n\n`)
               );
             }
@@ -225,11 +225,11 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
           const firstImportIndex = cleanedCode.indexOf('import');
           const firstFunctionIndex = cleanedCode.indexOf('function');
           const firstConstIndex = cleanedCode.indexOf('const');
-          
+
           const startIndex = Math.min(
             ...[firstImportIndex, firstFunctionIndex, firstConstIndex].filter(i => i !== -1)
           );
-          
+
           if (startIndex > 0 && startIndex !== Infinity) {
             cleanedCode = cleanedCode.substring(startIndex);
           }
@@ -244,7 +244,7 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
             // Try to find component name and add export
             const functionMatch = cleanedCode.match(/function\s+([A-Z]\w*)/);
             const constMatch = cleanedCode.match(/const\s+([A-Z]\w*)\s*=/);
-            
+
             if (functionMatch) {
               cleanedCode += `\n\nexport default ${functionMatch[1]};`;
             } else if (constMatch) {
@@ -266,12 +266,12 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
 
         } catch (error: any) {
           console.error('Stream generation error:', error);
-          
+
           const errorMessage = error.message || 'Failed to generate component';
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ 
-              stage: 'error', 
-              error: errorMessage 
+            encoder.encode(`data: ${JSON.stringify({
+              stage: 'error',
+              error: errorMessage
             })}\n\n`)
           );
           controller.close();
@@ -291,10 +291,10 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
   } catch (error: any) {
     console.error('API route error:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message || 'Internal server error',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      }), 
+      }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
