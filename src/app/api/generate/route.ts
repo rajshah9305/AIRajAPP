@@ -2,10 +2,6 @@
 import { NextRequest } from 'next/server';
 import Cerebras from '@cerebras/cerebras_cloud_sdk';
 
-const client = new Cerebras({
-  apiKey: process.env.CEREBRAS_API_KEY!,
-});
-
 const systemPrompt = `You are an expert React/TypeScript developer. Generate ONLY valid React component code.
 
 CRITICAL RULES:
@@ -132,6 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     const encoder = new TextEncoder();
+    const client = new Cerebras({ apiKey: process.env.CEREBRAS_API_KEY! });
     const stream = new ReadableStream({
       async start(controller) {
         let fullResponse = '';
