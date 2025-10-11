@@ -165,7 +165,7 @@ export default function GeneratedComponent() {
         }
       };
     }
-  }, [code, refreshKey]);
+  }, [code]);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
