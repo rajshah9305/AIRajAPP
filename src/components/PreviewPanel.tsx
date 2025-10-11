@@ -73,12 +73,12 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
         cleanedCode = `import React, { useState } from 'react';\n${cleanedCode}`;
       }
 
-      // Convert Tailwind classes to inline styles for Sandpack compatibility
-      cleanedCode = cleanedCode.replace(/className="([^"]*)"/g, (match, classes) => {
+      // Convert Tailwind classes to inline styles (as fallback if AI still generates them)
+      cleanedCode = cleanedCode.replace(/className="([^"]*)"/g, (match: string, classes: string) => {
         const styleMap: Record<string, string> = {
-          'bg-red-500': 'background: "#ef4444"',
-          'bg-red-600': 'background: "#dc2626"',
-          'bg-red-700': 'background: "#b91c1c"',
+          'bg-red-500': 'backgroundColor: "#ef4444"',
+          'bg-red-600': 'backgroundColor: "#dc2626"',
+          'bg-red-700': 'backgroundColor: "#b91c1c"',
           'text-white': 'color: "#ffffff"',
           'text-red-500': 'color: "#ef4444"',
           'text-red-600': 'color: "#dc2626"',
@@ -103,7 +103,7 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
         const classArray = classes.split(' ').filter(Boolean);
         const styles: string[] = [];
         
-        classArray.forEach(cls => {
+        classArray.forEach((cls: string) => {
           if (styleMap[cls]) {
             styles.push(styleMap[cls]);
           }
