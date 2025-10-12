@@ -1,0 +1,59 @@
+{
+  "name": "raj-ai-app-builder",
+  "version": "1.0.0",
+  "description": "Enterprise-grade AI-powered React application generator using Cerebras AI",
+  "private": true,
+  "author": "RAJ",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rajshah9305/AIRajAPP.git"
+  },
+  "keywords": [
+    "ai",
+    "react",
+    "code-generation",
+    "cerebras",
+    "nextjs",
+    "typescript"
+  ],
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint --fix",
+    "lint:check": "next lint",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run type-check && npm run lint:check",
+    "clean": "rm -rf .next out coverage",
+    "analyze": "ANALYZE=true npm run build",
+    "security:audit": "npm audit --audit-level=moderate",
+    "deps:update": "npm update",
+    "deps:check": "npm outdated"
+  },
+  "dependencies": {
+    "@codesandbox/sandpack-react": "^2.19.9",
+    "lucide-react": "^0.263.1",
+    "next": "14.2.33",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "@cerebras/cerebras_cloud_sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.17",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.2.33",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+
