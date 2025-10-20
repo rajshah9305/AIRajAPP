@@ -72,51 +72,12 @@ export function PreviewPanel({ code }: PreviewPanelProps) {
       let cleanedCode = componentCode;
 
       // Ensure React import exists
-      if (!cleanedCode.includes('import React') && !cleanedCode.includes('from "react"') && !cleanedCode.includes("from 'react'")) {
-        cleanedCode = `import React, { useState } from 'react';\n${cleanedCode}`;
+      if (!cleanedCode.includes('import React') && !cleanedCode.includes('from "react"') && !cleanedCode.includes("from 'react'") && !cleanedCode.includes('import {')) {
+        cleanedCode = `import React from 'react';\n${cleanedCode}`;
       }
 
       // Convert Tailwind classes to inline styles (as fallback)
-      cleanedCode = cleanedCode.replace(/className="([^"]*)"/g, (match: string, classes: string) => {
-        const styleMap: Record<string, string> = {
-          'bg-red-500': 'backgroundColor: "#ef4444"',
-          'bg-red-600': 'backgroundColor: "#dc2626"',
-          'bg-red-700': 'backgroundColor: "#b91c1c"',
-          'text-white': 'color: "#ffffff"',
-          'text-red-500': 'color: "#ef4444"',
-          'text-red-600': 'color: "#dc2626"',
-          'rounded-md': 'borderRadius: "0.375rem"',
-          'shadow-md': 'boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"',
-          'p-10': 'padding: "2.5rem"',
-          'p-4': 'padding: "1rem"',
-          'px-4': 'paddingLeft: "1rem", paddingRight: "1rem"',
-          'py-2': 'paddingTop: "0.5rem", paddingBottom: "0.5rem"',
-          'mb-5': 'marginBottom: "1.25rem"',
-          'w-full': 'width: "100%"',
-          'h-screen': 'height: "100vh"',
-          'flex': 'display: "flex"',
-          'justify-center': 'justifyContent: "center"',
-          'items-center': 'alignItems: "center"',
-          'text-3xl': 'fontSize: "1.875rem"',
-          'font-bold': 'fontWeight: "700"',
-          'border': 'border: "1px solid #e5e7eb"',
-          'border-gray-300': 'borderColor: "#d1d5db"',
-        };
-
-        const classArray = classes.split(' ').filter(Boolean);
-        const styles: string[] = [];
-        
-        classArray.forEach((cls: string) => {
-          if (styleMap[cls]) {
-            styles.push(styleMap[cls]);
-          }
-        });
-
-        if (styles.length > 0) {
-          return `style={{${styles.join(', ')}}}`;
-        }
-        return match;
-      });
+      
 
       // Ensure code has export default
       if (!cleanedCode.includes('export default')) {
@@ -308,7 +269,7 @@ body {
             <div className="w-full h-full">
               <Sandpack
                 key={refreshKey}
-                template="react"
+                template="react-typescript"
                 files={sandpackFiles}
                 options={{
                   showNavigator: false,
@@ -318,8 +279,9 @@ body {
                   autorun: true,
                   autoReload: true,
                   recompileMode: 'immediate',
-                  editorHeight: 0,
-                  editorWidthPercentage: 0,
+                  editorHeight: 300,
+                  editorWidthPercentage: 100,
+
                 }}
                 customSetup={{
                   dependencies: {
