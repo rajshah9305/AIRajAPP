@@ -1,4 +1,3 @@
-// src/app/api/generate/route.ts
 import { NextRequest } from 'next/server';
 
 // Dynamically import Cerebras only when needed to avoid build errors
@@ -167,7 +166,7 @@ export async function POST(req: NextRequest) {
           );
 
           const completion = await clientInstance.chat.completions.create({
-            model: 'llama3.1-8b',
+            model: 'gemini-2.5-flash',
             messages: [
               { role: 'system', content: systemPrompt },
               {
@@ -188,12 +187,16 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
             const delta = (chunk as any).choices?.[0]?.delta;
             const content = delta?.content || '';
 
-            if (!content) continue;
+            if (!content) {
+              // If content is empty, check for finish_reason to break loop
+              if (chunk.choices?.[0]?.finish_reason) break;
+              continue;
+            }
 
             fullResponse += content;
 
-            // Start streaming once we see code beginning
-            if (!hasStartedCode && (content.includes('import') || content.includes('function') || content.includes('const'))) {
+            // Start streaming once we see code beginning or a significant amount of content
+            if (!hasStartedCode && (content.includes('import') || content.includes('function') || content.includes('const') || fullResponse.length > 100)) {
               hasStartedCode = true;
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({
@@ -217,20 +220,24 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
           // Post-process the complete response
           let cleanedCode = fullResponse
             .replace(/^```+\s*(typescript|tsx|jsx|javascript|ts|js|react)?\s*\n?/gm, '')
-            .replace(/\n?```+\s*$/gm, '')
-            .replace(/^```+\s*$/gm, '')
+            .replace(/\n?```+\s*$/gm, '') // Remove closing code block fences
+            .replace(/^```+\s*$/gm, '') // Remove standalone code block fences
             .trim();
+
+          // Aggressively remove any leading or trailing markdown code block fences
+          if (cleanedCode.startsWith('```')) cleanedCode = cleanedCode.substring(cleanedCode.indexOf('\n') + 1);
+          if (cleanedCode.endsWith('```')) cleanedCode = cleanedCode.substring(0, cleanedCode.lastIndexOf('\n```'));
+          cleanedCode = cleanedCode.trim();
 
           // Remove any leading text before the first import
           const firstImportIndex = cleanedCode.indexOf('import');
           const firstFunctionIndex = cleanedCode.indexOf('function');
           const firstConstIndex = cleanedCode.indexOf('const');
 
-          const startIndex = Math.min(
-            ...[firstImportIndex, firstFunctionIndex, firstConstIndex].filter(i => i !== -1)
-          );
+          const relevantIndices = [firstImportIndex, firstFunctionIndex, firstConstIndex].filter(i => i !== -1);
+          const startIndex = relevantIndices.length > 0 ? Math.min(...relevantIndices) : -1;
 
-          if (startIndex > 0 && startIndex !== Infinity) {
+          if (startIndex > 0) {
             cleanedCode = cleanedCode.substring(startIndex);
           }
 
@@ -241,14 +248,12 @@ REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind cl
 
           // Ensure export default exists
           if (!cleanedCode.includes('export default')) {
-            // Try to find component name and add export
-            const functionMatch = cleanedCode.match(/function\s+([A-Z]\w*)/);
-            const constMatch = cleanedCode.match(/const\s+([A-Z]\w*)\s*=/);
-
-            if (functionMatch) {
-              cleanedCode += `\n\nexport default ${functionMatch[1]};`;
-            } else if (constMatch) {
-              cleanedCode += `\n\nexport default ${constMatch[1]};`;
+            const componentNameMatch = cleanedCode.match(/(?:function|const)\s+([A-Z]\w*)/);
+            if (componentNameMatch && componentNameMatch[1]) {
+              cleanedCode += `\n\nexport default ${componentNameMatch[1]};`;
+            } else {
+              // Fallback if no specific component name is found, export a generic App
+              cleanedCode += `\n\nexport default App;`;
             }
           }
 
