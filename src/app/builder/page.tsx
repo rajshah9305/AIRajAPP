@@ -56,7 +56,7 @@ function BuilderContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: isFollowUp
-            ? `Previous code:\n${generatedCode}\n\nUser request: ${userPrompt}\n\nPlease apply the requested changes and return the full updated component.`
+            ? `Previous code:\n${generatedCode}\n\nUser request: ${userPrompt}\n\nPlease apply the requested changes and return the full updated component. REMEMBER: Use ONLY inline styles (style={{}}), NO className prop, NO Tailwind classes. Make it beautiful with proper colors, spacing, and interactions.`
             : userPrompt,
         }),
         signal: abortRef.current.signal,
@@ -169,7 +169,7 @@ function BuilderContent() {
                         ? 'bg-primary-500 text-white'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                    {m.role === 'user' ? m.content : <code className="text-xs">Component updated</code>}
+                    {m.role === 'user' ? m.content : <code className="text-xs">{m.content.length > 50 ? m.content.substring(0, 50) + '...' : m.content}</code>}
                   </div>
                 </div>
               ))}
