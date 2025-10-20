@@ -7,9 +7,10 @@ interface CodeEditorProps {
   code: string;
   isStreaming: boolean;
   onCodeChange: (code: string) => void;
+  onRefresh: () => void;
 }
 
-export function CodeEditor({ code, isStreaming, onCodeChange }: CodeEditorProps) {
+export function CodeEditor({ code, isStreaming, onCodeChange, onRefresh }: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -68,6 +69,14 @@ export function CodeEditor({ code, isStreaming, onCodeChange }: CodeEditorProps)
           >
             <Download className="w-3 sm:w-4 h-3 sm:h-4" />
             <span className="hidden md:inline">Download</span>
+          </button>
+          <button 
+            onClick={onRefresh}
+            disabled={isStreaming}
+            className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className="w-3 sm:w-4 h-3 sm:h-4" />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       </div>
