@@ -47,16 +47,13 @@ let componentCode = code
 try {
   let cleanedCode = componentCode;
 
-  // Ensure React import exists
   if (!cleanedCode.includes('import React') && 
       !cleanedCode.includes('from "react"') && 
       !cleanedCode.includes("from 'react'")) {
     cleanedCode = `import React from 'react';\n${cleanedCode}`;
   }
 
-  // Ensure code has export default
   if (!cleanedCode.includes('export default')) {
-    // Find the main component name
     const functionMatch = cleanedCode.match(/function\s+([A-Z]\w*)/);
     const constMatch = cleanedCode.match(/const\s+([A-Z]\w*)\s*=/);
     const componentName = functionMatch?.[1] || constMatch?.[1] || 'App';
@@ -197,7 +194,6 @@ default: return ‘Idle’;
 
 return (
 <div className="flex flex-col bg-white rounded-lg sm:rounded-xl overflow-hidden h-full shadow-lg border border-gray-200">
-{/* Header */}
 <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
 <div className="flex items-center gap-1 sm:gap-2">
 <h3 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900">Live Preview</h3>
@@ -233,7 +229,6 @@ title="Refresh preview"
 </div>
 
 ```
-  {/* Preview Area */}
   <div className="flex-1 relative min-h-0 overflow-hidden">
     {hasError && errorMessage && (
       <div className="absolute top-4 left-4 right-4 z-10 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 animate-fadeIn shadow-lg">
