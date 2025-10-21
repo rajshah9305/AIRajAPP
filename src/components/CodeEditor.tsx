@@ -47,7 +47,6 @@ toast.error(“Failed to download code”);
 
 return (
 <div className="flex-1 flex flex-col bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-200 overflow-hidden h-full">
-{/* Header */}
 <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
 <div className="flex items-center gap-1 sm:gap-2">
 <h3 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900">Generated Code</h3>
@@ -90,7 +89,6 @@ title="Refresh preview"
 </div>
 
 ```
-  {/* Code Editor Area */}
   <div className="flex-1 relative min-h-0 overflow-hidden">
     <textarea
       ref={textareaRef}
@@ -107,7 +105,6 @@ title="Refresh preview"
       }}
     />
     
-    {/* Empty State */}
     {!code && !isStreaming && (
       <div className="absolute inset-0 flex items-center justify-center text-gray-400 pointer-events-none">
         <div className="text-center space-y-3 p-6">
