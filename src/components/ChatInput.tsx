@@ -46,7 +46,6 @@ if (!input.trim() || isGenerating) return;
 onSendMessage(input.trim());
 setInput('');
 
-// Reset textarea height
 if (textareaRef.current) {
   textareaRef.current.style.height = 'auto';
 }
@@ -63,7 +62,6 @@ handleSubmit(e);
 
 const handleSuggestionClick = (suggestion: string) => {
 setInput(suggestion);
-// Focus textarea after setting suggestion
 setTimeout(() => {
 textareaRef.current?.focus();
 }, 0);
@@ -71,7 +69,6 @@ textareaRef.current?.focus();
 
 return (
 <div className="border-t border-gray-200 bg-white">
-{/* Chat Messages */}
 {messages.length > 0 && (
 <div className="max-h-48 overflow-y-auto border-b border-gray-100">
 <div className="p-3 space-y-2">
@@ -93,7 +90,6 @@ className={`max-w-[80%] px-3 py-2 rounded-lg text-sm transition-all duration-200
 )}
 
 ```
-  {/* Input Area */}
   <div className="p-3 sm:p-4">
     <form onSubmit={handleSubmit} className="flex items-end gap-2">
       <div className="flex-1 relative">
@@ -143,7 +139,6 @@ className={`max-w-[80%] px-3 py-2 rounded-lg text-sm transition-all duration-200
       </div>
     </form>
 
-    {/* Suggestions for first message */}
     {messages.length === 0 && (
       <div className="mt-3 flex flex-wrap gap-2">
         {[
@@ -162,7 +157,6 @@ className={`max-w-[80%] px-3 py-2 rounded-lg text-sm transition-all duration-200
       </div>
     )}
 
-    {/* Helper text */}
     {messages.length === 0 && (
       <div className="mt-3 text-xs text-gray-500 text-center">
         Press <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Enter</kbd> to send, 
